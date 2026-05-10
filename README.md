@@ -1,5 +1,7 @@
 # OpenRouter Free Provider
 
+<img src="webui/thumbnail.png" alt="OpenRouter Free Provider logo" width="160">
+
 Adds free tool-capable OpenRouter chat models.
 
 This is a root-layout Agent Zero community plugin. Agent Zero installs it from Git because `plugin.yaml` lives at the repository root.
