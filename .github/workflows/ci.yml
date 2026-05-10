@@ -39,3 +39,8 @@ jobs:
         env:
           OPENROUTER_FREE_API_KEY: ${{ secrets.OPENROUTER_FREE_API_KEY }}
         run: uv run --with httpx python ci/run_live_provider_smoke.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: provider-live-catalog
+          path: artifacts/

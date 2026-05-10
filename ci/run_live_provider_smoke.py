@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import json, os, sys
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from helpers.filter import filter_models
 ENV_VAR="OPENROUTER_FREE_API_KEY"
 CATALOG_URL="https://openrouter.ai/api/v1/models"
 CATALOG_KIND="openrouter"
 PROVIDER_ID="openrouter_free"
 PARAMS={'output_modalities': 'text', 'supported_parameters': 'tools'}
+ARTIFACTS=Path("artifacts")
 def main() -> int:
     api_key=os.environ.get(ENV_VAR,"")
     if not api_key:
@@ -21,12 +24,19 @@ def main() -> int:
         print(f"{PROVIDER_ID} live catalog returned HTTP {exc.code}", file=sys.stderr); return 1
     except (OSError, URLError, json.JSONDecodeError) as exc:
         print(f"{PROVIDER_ID} live catalog request failed: {exc}", file=sys.stderr); return 1
-    ids=extract_model_ids(payload)
+    raw_ids=extract_model_ids(payload)
+    ids, excluded=presented_model_ids(payload, raw_ids)
     if not ids:
-        print(f"{PROVIDER_ID} live catalog returned no recognizable models", file=sys.stderr); return 1
-    print(json.dumps({"provider_id": PROVIDER_ID, "model_count": len(ids), "sample": ids[:10]}, indent=2)); return 0
+        print(f"{PROVIDER_ID} live catalog presented no recognizable models", file=sys.stderr); return 1
+    report={"provider_id":PROVIDER_ID,"catalog_url":CATALOG_URL,"catalog_params":PARAMS,"raw_model_count":len(raw_ids),"presented_model_count":len(ids),"excluded_count":sum(excluded.values()),"excluded_reasons":excluded,"models":ids}
+    ARTIFACTS.mkdir(exist_ok=True)
+    (ARTIFACTS/"provider-live-catalog.json").write_text(json.dumps(report, indent=2, sort_keys=True)+"\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, sort_keys=True)); return 0
 def extract_model_ids(payload: object) -> list[str]:
     if not isinstance(payload, dict): return []
     if CATALOG_KIND == "ollama": return sorted({item.get("name") for item in payload.get("models", []) if isinstance(item, dict) and isinstance(item.get("name"), str)})
     return sorted({item.get("id") for item in payload.get("data", []) if isinstance(item, dict) and isinstance(item.get("id"), str)})
+def presented_model_ids(payload: object, raw_ids: list[str]) -> tuple[list[str], dict[str, int]]:
+    if not isinstance(payload, dict): return [], {"invalid_catalog": 1}
+    return filter_models(payload)
 if __name__ == "__main__": raise SystemExit(main())

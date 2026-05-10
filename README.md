@@ -43,7 +43,7 @@ GitHub Actions requires this repository secret:
 
 - `OPENROUTER_FREE_API_KEY`: API key used by required live provider CI.
 
-If the secret is missing, CI fails with a message naming the required secret. NVIDIA additionally uses the same secret in the scheduled catalog refresh workflow.
+If the secret is missing, CI fails with a message naming the required secret. Live CI prints and uploads `artifacts/provider-live-catalog.json` with the full filtered model catalog presented by this provider.
 
 ## Troubleshooting
 
