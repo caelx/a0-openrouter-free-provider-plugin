@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from helpers.filter import filter_models
 ENV_VAR="OPENROUTER_FREE_API_KEY"
 CATALOG_URL="https://openrouter.ai/api/v1/models"
